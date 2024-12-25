@@ -1,11 +1,10 @@
+import asyncio
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.dispatcher.filters.builtin import Text
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-import asyncio
-
-token = "!!!!!!!!!!!!!!!!!!!"
+token = "!!!!!!!!!!!!!!!!!!"
 bot = Bot(token=token)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
@@ -16,7 +15,12 @@ class UserState(StatesGroup):
     weight = State()  # вес
 
 
-@dp.message_handler(Text(equals=['Calories'], ignore_case=True))
+kbd = ReplyKeyboardMarkup(resize_keyboard=True).add(
+    KeyboardButton(text='Рассчитать'),
+    KeyboardButton(text='Информация'))
+
+
+@dp.message_handler(text=['Рассчитать'])
 async def set_age(message):
     await message.answer('Введите свой возраст (лет):')
     await UserState.age.set()
@@ -58,7 +62,7 @@ async def send_calories(message, state):
         # Resting energy expenditure
         REE = 10 * data['weight'] \
             + 6.25 * data['growth'] \
-            - 5 * data['age'] + 5
+            - 5 * data['age'] - 161
         await message.answer(
             f'Ваша суточная норма {round(REE, 2)} килокалорий')
         await state.finish()
@@ -68,13 +72,21 @@ async def send_calories(message, state):
 async def start(message):
     await message.answer(
         'Привет! Я бот помогающий вашему здоровью.'
-        ' Введите слово Calories, чтобы узнать вашу суточную норму'
-        ' потребления калорий')
+        ' Нажмите "Рассчитать", чтобы узнать вашу суточную норму'
+        ' потребления килокалорий', reply_markup=kbd)
+
+
+@dp.message_handler(text=['Информация'])
+async def info(message):
+    await message.answer(
+        'Данный бот подсчитывает норму потребления килокалорий  по'
+        ' упрощённой формуле Миффлина для женщин ')
 
 
 @dp.message_handler()
 async def all_messages(message):
     await message.answer('Введите команду /start, чтобы начать общение.')
+
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)
