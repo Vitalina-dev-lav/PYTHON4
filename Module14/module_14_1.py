@@ -13,6 +13,8 @@ balance INTENGER NOT NULL
 )
 ''')
 
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_email ON Users (email)")
+
 for i in range(1, 11):
     cursor.execute(
         'INSERT INTO Users (username, email, age, balance) '
